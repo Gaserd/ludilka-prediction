@@ -97,7 +97,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               <div className="card app-stat-card">
                 <span className="app-muted">Активных прогнозов</span>
                 <strong>
-                  {data.events.reduce((sum, event) => sum + event._count.predictions, 0)}
+                  {data.events.reduce(
+                    (sum: number, event) => sum + event._count.predictions,
+                    0,
+                  )}
                 </strong>
               </div>
             </div>
