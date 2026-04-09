@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  RESOLVED
+  CANCELLED
+}
+
+model User {
+  id                String              @id @default(cuid())
+  name              String
+  email             String              @unique
+  passwordHash      String
+  role              Role                @default(USER)
+  predictions       Prediction[]
+  predictionComments PredictionComment[]
+  createdEvents     Event[]             @relation("EventCreatedBy")
+  updatedEvents     Event[]             @relation("EventUpdatedBy")
+  resolutions       EventResolution[]   @relation("EventResolvedBy")
+  auditLogs         AuditLog[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+model Event {
+  id               String          @id @default(cuid())
+  slug             String          @unique
+  title            String
+  description      String          @db.Text
+  conditionText    String          @db.Text
+  imagePath        String?
+  sourceUrl        String?
+  sourceType       String?
+  externalEntityId String?
+  status           EventStatus     @default(DRAFT)
+  publishedAt      DateTime?
+  closesAt         DateTime?
+  createdById      String
+  updatedById      String?
+  createdBy        User            @relation("EventCreatedBy", fields: [createdById], references: [id])
+  updatedBy        User?           @relation("EventUpdatedBy", fields: [updatedById], references: [id])
+  outcomes         EventOutcome[]
+  predictions      Prediction[]
+  resolution       EventResolution?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([status, publishedAt])
+}
+
+model EventOutcome {
+  id                 String      @id @default(cuid())
+  eventId            String
+  label              String
+  probabilityPercent Decimal     @db.Decimal(5, 2)
+  displayOrder       Int         @default(0)
+  event              Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  predictions        Prediction[]
+  winningResolutions EventResolution[] @relation("WinningOutcome")
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  @@unique([eventId, label])
+  @@index([eventId, displayOrder])
+}
+
+model Prediction {
+  id                     String              @id @default(cuid())
+  userId                 String
+  eventId                String
+  outcomeId              String
+  note                   String?             @db.VarChar(280)
+  lockedProbabilityPercent Decimal?          @db.Decimal(5, 2)
+  comments               PredictionComment[]
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  user                   User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event                  Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  outcome                EventOutcome        @relation(fields: [outcomeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@index([eventId])
+}
+
+model PredictionComment {
+  id           String     @id @default(cuid())
+  predictionId String
+  authorId     String
+  body         String     @db.VarChar(500)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  prediction   Prediction @relation(fields: [predictionId], references: [id], onDelete: Cascade)
+  author       User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([predictionId, createdAt])
+}
+
+model EventResolution {
+  id               String       @id @default(cuid())
+  eventId          String       @unique
+  winningOutcomeId String
+  resolvedById     String
+  proofUrl         String?
+  notes            String?      @db.Text
+  resolvedAt       DateTime     @default(now())
+  event            Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  winningOutcome   EventOutcome @relation("WinningOutcome", fields: [winningOutcomeId], references: [id])
+  resolvedBy       User         @relation("EventResolvedBy", fields: [resolvedById], references: [id])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  action     String
+  entityType String
+  entityId   String
+  details    Json?
+  createdAt  DateTime @default(now())
+  actor      User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([entityType, entityId])
+}

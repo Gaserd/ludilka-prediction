@@ -6,12 +6,30 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "db:create": "node --env-file=.env scripts/ensure-db.mjs",
+    "prisma:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "seed:fake": "node --env-file=.env scripts/seed-fake-predictions.mjs",
+    "setup": "npm run db:create && npm run prisma:generate && npm run db:push",
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
+    "chota": "^0.9.2",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.8.0",
     "next": "16.2.3",
+    "next-auth": "^4.24.13",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-hook-form": "^7.72.1",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -20,6 +38,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
+    "prisma": "^6.19.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
