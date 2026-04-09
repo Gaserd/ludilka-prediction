@@ -25,10 +25,10 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
       NODE_ENV: production
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3001}
       AUTH_SECRET: ${AUTH_SECRET:-change-me-before-production}
       POSTGRES_DB: ${POSTGRES_DB:-ludilka_prediction}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
