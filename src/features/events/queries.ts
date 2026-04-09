@@ -25,24 +25,6 @@ function normalizeBaseOutcomes(
   }));
 }
 
-function serializeResolution<
-  T extends
-    | {
-        winningOutcome: { probabilityPercent: unknown };
-      }
-    | null
-    | undefined,
->(resolution: T) {
-  if (!resolution) {
-    return resolution;
-  }
-
-  return {
-    ...resolution,
-    winningOutcome: serializeOutcome(resolution.winningOutcome),
-  };
-}
-
 export type AdminDashboardData = {
   admins: Array<{
     id: string;
@@ -79,7 +61,142 @@ export type AdminDashboardData = {
   }>;
 };
 
-export async function getPublicEvents() {
+export type PublicEventListItem = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  conditionText: string;
+  imagePath: string | null;
+  status: EventStatus;
+  createdAt: Date;
+  publishedAt: Date | null;
+  _count: {
+    predictions: number;
+  };
+  outcomes: Array<{
+    id: string;
+    label: string;
+    probabilityPercent: number;
+    initialProbabilityPercent: number;
+    predictionCount: number;
+  }>;
+  resolution: null | {
+    winningOutcomeId: string;
+    resolvedAt: Date;
+    winningOutcome: {
+      label: string;
+    };
+  };
+};
+
+export type PublicEventDetails = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  conditionText: string;
+  imagePath: string | null;
+  sourceUrl: string | null;
+  sourceType: string | null;
+  externalEntityId: string | null;
+  status: EventStatus;
+  createdAt: Date;
+  publishedAt: Date | null;
+  closesAt: Date | null;
+  outcomes: Array<{
+    id: string;
+    label: string;
+    probabilityPercent: number;
+    initialProbabilityPercent: number;
+    predictionCount: number;
+  }>;
+  predictions: Array<{
+    id: string;
+    userId: string;
+    outcomeId: string;
+    note: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+    lockedProbabilityPercent: number;
+    commentCount: number;
+    user: {
+      id: string;
+      name: string;
+    };
+    outcome: {
+      id: string;
+      label: string;
+      probabilityPercent: number;
+    };
+    comments: Array<{
+      id: string;
+      body: string;
+      createdAt: Date;
+      author: {
+        id: string;
+        name: string;
+      };
+    }>;
+  }>;
+  resolution: null | {
+    winningOutcomeId: string;
+    resolvedAt: Date;
+    notes: string | null;
+    winningOutcome: {
+      label: string;
+    };
+  };
+  marketHistory: Array<{
+    at: Date;
+    outcomes: Array<{
+      id: string;
+      label: string;
+      probabilityPercent: number;
+    }>;
+  }>;
+};
+
+export type EditableEventData = {
+  id: string;
+  title: string;
+  description: string;
+  conditionText: string;
+  sourceUrl: string | null;
+  sourceType: string | null;
+  externalEntityId: string | null;
+  status: EventStatus;
+  closesAt: Date | null;
+  imagePath: string | null;
+  outcomes: Array<{
+    id: string;
+    label: string;
+    probabilityPercent: number;
+    initialProbabilityPercent: number;
+    predictionCount: number;
+  }>;
+};
+
+export type UserPredictionHistoryItem = {
+  id: string;
+  note: string | null;
+  updatedAt: Date;
+  outcome: {
+    label: string;
+  };
+  event: {
+    slug: string;
+    title: string;
+    status: EventStatus;
+    resolution: null | {
+      winningOutcome: {
+        label: string;
+      };
+    };
+  };
+};
+
+export async function getPublicEvents(): Promise<PublicEventListItem[]> {
   if (!isDatabaseConfigured()) {
     return [];
   }
@@ -121,11 +238,13 @@ export async function getPublicEvents() {
       normalizeBaseOutcomes(event.outcomes),
       event.predictions,
     ),
-    resolution: serializeResolution(event.resolution),
+    resolution: event.resolution,
   }));
 }
 
-export async function getPublicEventBySlug(slug: string) {
+export async function getPublicEventBySlug(
+  slug: string,
+): Promise<PublicEventDetails | null> {
   if (!isDatabaseConfigured()) {
     return null;
   }
@@ -218,7 +337,7 @@ export async function getPublicEventBySlug(slug: string) {
           right.comments.length - left.comments.length ||
           right.createdAt.getTime() - left.createdAt.getTime(),
       ),
-    resolution: serializeResolution(event.resolution),
+    resolution: event.resolution,
     marketHistory: timeline.timeline,
   };
 }
@@ -283,12 +402,14 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
         normalizeBaseOutcomes(event.outcomes),
         event.predictions,
       ),
-      resolution: serializeResolution(event.resolution),
+      resolution: event.resolution,
     })),
   };
 }
 
-export async function getEditableEventById(id: string) {
+export async function getEditableEventById(
+  id: string,
+): Promise<EditableEventData | null> {
   if (!isDatabaseConfigured()) {
     return null;
   }
@@ -329,7 +450,9 @@ export async function getEditableEventById(id: string) {
   };
 }
 
-export async function getUserPredictions(userId: string) {
+export async function getUserPredictions(
+  userId: string,
+): Promise<UserPredictionHistoryItem[]> {
   if (!isDatabaseConfigured()) {
     return [];
   }
