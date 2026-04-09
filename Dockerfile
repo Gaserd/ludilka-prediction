@@ -1,7 +1,8 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+COPY prisma ./prisma
+RUN npm ci && npm run prisma:generate
 
 FROM node:22-alpine AS builder
 WORKDIR /app
