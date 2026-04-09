@@ -1,7 +1,6 @@
 "use server";
 
 import { hash } from "bcryptjs";
-import { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
@@ -112,9 +111,11 @@ export async function createAdminAction(
       action: "admin.created",
       entityType: "User",
       entityId: admin.id,
-      details: {
-        email: admin.email,
-      } satisfies Prisma.InputJsonValue,
+      details: JSON.parse(
+        JSON.stringify({
+          email: admin.email,
+        }),
+      ),
     },
   });
 

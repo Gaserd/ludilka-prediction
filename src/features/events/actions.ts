@@ -1,6 +1,6 @@
 "use server";
 
-import { EventStatus, Prisma } from "@prisma/client";
+import { EventStatus } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
@@ -51,7 +51,7 @@ async function writeAuditLog(
   actorId: string,
   action: string,
   entityId: string,
-  details?: Prisma.InputJsonValue,
+  details?: unknown,
 ) {
   await db.auditLog.create({
     data: {
@@ -59,7 +59,7 @@ async function writeAuditLog(
       action,
       entityType: "Event",
       entityId,
-      details,
+      details: details == null ? undefined : JSON.parse(JSON.stringify(details)),
     },
   });
 }
