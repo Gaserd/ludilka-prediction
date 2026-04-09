@@ -43,6 +43,42 @@ function serializeResolution<
   };
 }
 
+export type AdminDashboardData = {
+  admins: Array<{
+    id: string;
+    name: string;
+    email: string;
+    createdAt: Date;
+  }>;
+  events: Array<{
+    id: string;
+    title: string;
+    slug: string;
+    description: string;
+    conditionText: string;
+    status: EventStatus;
+    createdAt: Date;
+    publishedAt: Date | null;
+    _count: {
+      predictions: number;
+    };
+    outcomes: Array<{
+      id: string;
+      label: string;
+      probabilityPercent: number;
+      initialProbabilityPercent: number;
+      predictionCount: number;
+    }>;
+    resolution: null | {
+      winningOutcomeId: string;
+      resolvedAt: Date;
+      winningOutcome: {
+        label: string;
+      };
+    };
+  }>;
+};
+
 export async function getPublicEvents() {
   if (!isDatabaseConfigured()) {
     return [];
@@ -187,7 +223,7 @@ export async function getPublicEventBySlug(slug: string) {
   };
 }
 
-export async function getAdminDashboardData() {
+export async function getAdminDashboardData(): Promise<AdminDashboardData> {
   if (!isDatabaseConfigured()) {
     return {
       admins: [],

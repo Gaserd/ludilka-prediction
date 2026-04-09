@@ -38,6 +38,10 @@ function statusTone(status: string) {
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   await requireAdmin();
   const [query, data] = await Promise.all([searchParams, getAdminDashboardData()]);
+  const totalPredictions = data.events.reduce(
+    (sum, event) => sum + event._count.predictions,
+    0,
+  );
 
   const successMessage =
     buildSearchParamMessage(query.adminCreated, {
@@ -96,12 +100,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               </div>
               <div className="card app-stat-card">
                 <span className="app-muted">Активных прогнозов</span>
-                <strong>
-                  {data.events.reduce(
-                    (sum: number, event) => sum + event._count.predictions,
-                    0,
-                  )}
-                </strong>
+                <strong>{totalPredictions}</strong>
               </div>
             </div>
           </div>
